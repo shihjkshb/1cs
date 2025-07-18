@@ -1,82 +1,67 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>轻小说搜索下载站</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>小说搜索系统</title>
+  <!-- 引入Vue 3 -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.2.47/dist/vue.global.min.js"></script>
+  <!-- 引入样式 -->
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>轻小说收藏馆</h1>
-            <div class="anime-girl"></div>
-            <nav>
-                <button class="nav-btn active" data-target="search-view">搜索</button>
-                <button class="nav-btn" data-target="favorites-view">我的收藏</button>
-            </nav>
-        </header>
-        
-        <main>
-            <!-- 搜索视图 -->
-            <div id="search-view" class="view active">
-                <div class="search-box">
-                    <input type="text" id="search-input" placeholder="输入小说名称...">
-                    <select id="source-select">
-                        <option value="qidian">起点中文网</option>
-                        <option value="biquge">笔趣阁</option>
-                        <option value="hongxiu">红袖添香</option>
-                    </select>
-                    <button id="search-btn">搜索</button>
-                </div>
-                
-                <div class="results-container">
-                    <div class="novel-card template">
-                        <img src="" class="cover" alt="小说封面">
-                        <div class="novel-info">
-                            <h3 class="title">小说标题</h3>
-                            <p class="author">作者</p>
-                            <p class="desc">简介内容...</p>
-                            <div class="download-options">
-                                <button class="download-full">下载全本</button>
-                                <div class="chapter-range">
-                                    <input type="number" min="1" placeholder="起始章">
-                                    <span>至</span>
-                                    <input type="number" min="1" placeholder="结束章">
-                                    <button class="download-range">下载</button>
-                                </div>
-                                <button class="favorite-btn">加入收藏</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 收藏视图 -->
-            <div id="favorites-view" class="view">
-                <div class="favorites-container">
-                    <h2>我的收藏</h2>
-                    <div class="favorites-list">
-                        <!-- 收藏项模板 -->
-                        <div class="favorite-item template">
-                            <img src="" class="cover" alt="小说封面">
-                            <div class="favorite-info">
-                                <h3 class="title">小说标题</h3>
-                                <p class="author">作者</p>
-                                <button class="download-favorite">下载</button>
-                                <button class="remove-favorite">移除</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-        
-        <footer>
-            <p>免责声明：本站内容来自网络，仅供个人学习交流使用</p>
-        </footer>
-    </div>
+  <div id="app">
+    <!-- 导航栏 -->
+    <header>
+      <h1>📖 小说搜索系统</h1>
+      <div class="search-box">
+        <input v-model="searchKeyword" 
+               @keyup.enter="searchNovels" 
+               placeholder="输入书名或作者">
+        <select v-model="selectedSource">
+          <option v-for="source in availableSources" :value="source">
+            {{ source }}
+          </option>
+        </select>
+        <button @click="searchNovels">搜索</button>
+      </div>
+    </header>
 
-    <script src="script.js"></script>
+    <!-- 搜索结果 -->
+    <main>
+      <div v-if="loading" class="loading">加载中...</div>
+      
+      <div v-if="error" class="error">
+        {{ error }}
+        <button @click="retry">重试</button>
+      </div>
+
+      <div class="novel-list">
+        <div v-for="novel in novels" class="novel-card">
+          <img :src="novel.cover || 'default-cover.jpg'" 
+               :alt="novel.title">
+          <div class="novel-info">
+            <h3>{{ novel.title }}</h3>
+            <p>作者: {{ novel.author }}</p>
+            <p class="desc">{{ novel.desc || '暂无简介' }}</p>
+            <button @click="downloadNovel(novel)">下载</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 音乐播放器 -->
+    <div class="music-player">
+      <audio ref="bgm" loop>
+        <source src="https://music.163.com/song/media/outer/url?id=1824045033.mp3">
+      </audio>
+      <button @click="toggleMusic">
+        {{ musicPlaying ? '♫' : '♪' }}
+      </button>
+      <input type="range" v-model="volume" min="0" max="1" step="0.1">
+    </div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>

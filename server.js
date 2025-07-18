@@ -1,172 +1,150 @@
 const express = require('express');
-const puppeteer = require('puppeteer');
-const cheerio = require('cheerio');
+const axios = require('axios');
 const cors = require('cors');
+const fs = require('fs');
+const redis = require('redis');
+const schedule = require('node-schedule');
 
 const app = express();
-
-// 增强CORS配置
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST']
-}));
-
+app.use(cors());
 app.use(express.json());
 
-// 超时设置（毫秒）
-const TIMEOUT = 30000;
-// 重试次数
-const MAX_RETRIES = 2;
+// 初始化Redis客户端
+const redisClient = redis.createClient({
+  url: process.env.REDIS_URL || 'redis://localhost:6379'
+});
+redisClient.on('error', err => console.log('Redis Error:', err));
+redisClient.connect();
 
-// 支持的小说网站配置（增强版）
-const SOURCES = {
-    qidian: {
-        name: '起点中文网',
-        searchUrl: 'https://www.qidian.com/search?kw=',
-        baseUrl: 'https://www.qidian.com',
-        selectors: {
-            list: '.book-img-text li',
-            title: 'h4 a',
-            author: '.author a.name',
-            cover: '.book-img-box img',
-            desc: '.intro',
-            link: 'h4 a'
-        },
-        // 新增防爬配置
-        headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-        }
-    },
-    biquge: {
-        name: '笔趣阁',
-        searchUrl: 'http://www.biquge.com.tw/search.php?keyword=',
-        baseUrl: 'http://www.biquge.com.tw',
-        selectors: {
-            list: '#main .result-list .result-item',
-            title: '.result-game-item-title a',
-            author: '.result-game-item-info p:eq(0) span:eq(1)',
-            cover: '.result-game-item-pic img',
-            desc: '.result-game-item-desc',
-            link: '.result-game-item-title a'
-        },
-        // 新增延迟配置
-        delay: 2000
-    }
-};
+// 书源存储文件
+const SOURCES_FILE = 'sources.json';
 
-// 获取浏览器实例（单例模式）
-let browserInstance;
-async function getBrowser() {
-    if (!browserInstance) {
-        browserInstance = await puppeteer.launch({
-            headless: true,
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-dev-shm-usage'
-            ]
-        });
-    }
-    return browserInstance;
+// 加载书源
+function loadSources() {
+  try {
+    return JSON.parse(fs.readFileSync(SOURCES_FILE));
+  } catch {
+    // 默认书源
+    return [
+      {
+        name: '源1',
+        url: 'https://shuyuan-api.yiove.com/redirect/shuyuan/20250120201434.json',
+        enabled: true,
+        lastChecked: new Date().toISOString()
+      }
+    ];
+  }
 }
 
-// 增强的爬取函数
-async function crawlWithRetry(url, options = {}, retryCount = 0) {
-    try {
-        const browser = await getBrowser();
-        const page = await browser.newPage();
-        
-        // 设置请求头
-        await page.setExtraHTTPHeaders(options.headers || {});
-        
-        // 设置视口
-        await page.setViewport({ width: 1280, height: 800 });
-        
-        // 设置请求超时
-        await page.goto(url, {
-            waitUntil: 'networkidle2',
-            timeout: TIMEOUT
-        });
-
-        // 自定义延迟
-        if (options.delay) {
-            await page.waitForTimeout(options.delay);
-        }
-
-        const html = await page.content();
-        await page.close();
-        
-        return html;
-    } catch (error) {
-        if (retryCount < MAX_RETRIES) {
-            console.log(`第${retryCount + 1}次重试...`);
-            return crawlWithRetry(url, options, retryCount + 1);
-        }
-        throw error;
-    }
+// 保存书源
+function saveSources(sources) {
+  fs.writeFileSync(SOURCES_FILE, JSON.stringify(sources, null, 2));
 }
 
-// 获取小说搜索结果（增强版）
-app.get('/api/search', async (req, res) => {
-    try {
-        const { keyword, source } = req.query;
-        
-        if (!SOURCES[source]) {
-            return res.status(400).json({ 
-                error: '不支持的源站',
-                supportedSources: Object.keys(SOURCES) 
-            });
-        }
+let bookSources = loadSources();
 
-        const sourceConfig = SOURCES[source];
-        const searchUrl = `${sourceConfig.searchUrl}${encodeURIComponent(keyword)}`;
-        
-        const html = await crawlWithRetry(searchUrl, sourceConfig);
-        const $ = cheerio.load(html);
-        
-        const results = [];
-        $(sourceConfig.selectors.list).each((i, el) => {
-            const title = $(el).find(sourceConfig.selectors.title).text().trim();
-            const author = $(el).find(sourceConfig.selectors.author).text().trim();
-            const cover = $(el).find(sourceConfig.selectors.cover).attr('src');
-            const desc = $(el).find(sourceConfig.selectors.desc).text().trim();
-            const link = $(el).find(sourceConfig.selectors.link).attr('href');
+// 书源健康检查
+async function checkSourceHealth(source) {
+  try {
+    const start = Date.now();
+    await axios.head(source.url, { timeout: 5000 });
+    source.latency = Date.now() - start;
+    source.lastChecked = new Date().toISOString();
+    source.enabled = true;
+    return true;
+  } catch (error) {
+    source.enabled = false;
+    return false;
+  }
+}
 
-            if (title) {
-                results.push({
-                    title,
-                    author,
-                    cover: cover ? (cover.startsWith('http') ? cover : `${sourceConfig.baseUrl}${cover}`) : '',
-                    desc,
-                    link: link ? (link.startsWith('http') ? link : `${sourceConfig.baseUrl}${link}`) : '',
-                    source: sourceConfig.name
-                });
-            }
-        });
-
-        res.json(results.length > 0 ? results : { message: '未找到相关小说，请尝试更换关键词' });
-    } catch (error) {
-        console.error('搜索错误:', error);
-        res.status(500).json({ 
-            error: '搜索失败',
-            detail: error.message,
-            solution: '请检查：1.网络连接 2.目标网站是否可访问 3.稍后重试'
-        });
-    }
+// 定时任务：每30分钟检查书源
+schedule.scheduleJob('*/30 * * * *', async () => {
+  console.log('Running source health check...');
+  await Promise.all(bookSources.map(checkSourceHealth));
+  saveSources(bookSources);
 });
 
-// 其他API保持不变...
+// 自定义书源API
+app.post('/api/sources', async (req, res) => {
+  const newSource = req.body;
+  
+  // 验证书源
+  if (!newSource.url || !newSource.name) {
+    return res.status(400).json({ error: '缺少必要字段' });
+  }
+
+  // 检查是否已存在
+  if (bookSources.some(s => s.url === newSource.url)) {
+    return res.status(409).json({ error: '书源已存在' });
+  }
+
+  newSource.enabled = true;
+  bookSources.push(newSource);
+  saveSources(bookSources);
+  
+  res.json({ message: '书源添加成功', sources: bookSources });
+});
+
+// 获取缓存数据
+async function getCache(key) {
+  try {
+    const cached = await redisClient.get(key);
+    return cached ? JSON.parse(cached) : null;
+  } catch {
+    return null;
+  }
+}
+
+// 设置缓存
+async function setCache(key, data, ttl = 3600) {
+  try {
+    await redisClient.setEx(key, ttl, JSON.stringify(data));
+  } catch (err) {
+    console.error('Redis set error:', err);
+  }
+}
+
+// 搜索接口（带缓存和自动切换）
+app.get('/api/search', async (req, res) => {
+  const { keyword } = req.query;
+  const cacheKey = `search:${keyword}`;
+
+  try {
+    // 检查缓存
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
+    // 尝试可用书源
+    for (const source of bookSources.filter(s => s.enabled)) {
+      try {
+        const apiUrl = `${source.url}?keyword=${encodeURIComponent(keyword)}`;
+        const { data } = await axios.get(apiUrl, { timeout: 5000 });
+        
+        // 缓存结果
+        await setCache(cacheKey, data);
+        
+        return res.json(data);
+      } catch (error) {
+        console.log(`书源 ${source.name} 失败: ${error.message}`);
+        continue;
+      }
+    }
+    
+    throw new Error('所有书源均不可用');
+  } catch (error) {
+    res.status(500).json({ 
+      error: error.message,
+      availableSources: bookSources.filter(s => s.enabled).map(s => s.name) 
+    });
+  }
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`服务器运行在 http://localhost:${PORT}`);
-    console.log('可用源站:', Object.keys(SOURCES).join(', '));
-});
-
-// 优雅关闭
-process.on('SIGINT', async () => {
-    if (browserInstance) {
-        await browserInstance.close();
-    }
-    process.exit();
+  console.log(`服务已启动: http://localhost:${PORT}`);
+  // 初始健康检查
+  bookSources.forEach(checkSourceHealth);
 });

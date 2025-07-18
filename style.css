@@ -1,383 +1,233 @@
-/* 基础重置 */
+/* 基础样式 */
+:root {
+  --primary: #8a2be2;
+  --secondary: #ff9ff3;
+  --dark: #2c3e50;
+  --light: #f8f9fa;
+  --success: #2ecc71;
+  --danger: #e74c3c;
+  --warning: #f39c12;
+  --info: #3498db;
+}
+
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Arial', 'Microsoft YaHei', sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 body {
-    background-color: #fff5f7;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path fill="%23ffd6e7" fill-opacity="0.2" d="M30,10L50,30L70,10L90,30L70,50L90,70L70,90L50,70L30,90L10,70L30,50L10,30L30,10Z"/></svg>');
-    color: #5a3d5c;
-    line-height: 1.6;
+  background-color: #f5f5f5;
+  color: var(--dark);
+  line-height: 1.6;
 }
 
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
+#app {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
 }
 
 /* 头部样式 */
 header {
-    text-align: center;
-    margin-bottom: 30px;
-    position: relative;
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-h1 {
-    font-size: 2.5rem;
-    color: #ff85a2;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-    margin-bottom: 10px;
-    font-weight: 700;
+header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 15px;
 }
 
-.anime-girl {
-    width: 120px;
-    height: 120px;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="40" r="30" fill="%23ffb6c1"/><circle cx="38" cy="35" r="5" fill="%23614e6e"/><circle cx="62" cy="35" r="5" fill="%23614e6e"/><path d="M40,55Q50,65 60,55" stroke="%23614e6e" stroke-width="3" fill="none"/></svg>');
-    background-repeat: no-repeat;
-    background-position: center;
-    margin: 0 auto;
-}
-
-/* 导航栏 */
-nav {
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-    gap: 10px;
-}
-
-.nav-btn {
-    padding: 10px 20px;
-    background-color: #e2c2ff;
-    color: white;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-size: 1rem;
-}
-
-.nav-btn:hover {
-    background-color: #d1a6ff;
-}
-
-.nav-btn.active {
-    background-color: #ff85a2;
-    font-weight: bold;
-}
-
-/* 视图容器 */
-.view {
-    display: none;
-}
-
-.view.active {
-    display: block;
-    animation: fadeIn 0.5s ease-in-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-/* 搜索框样式 */
 .search-box {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
-    justify-content: center;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
-#search-input {
-    flex: 1;
-    min-width: 200px;
-    max-width: 500px;
-    padding: 12px 15px;
-    border: 2px solid #ffb6c1;
-    border-radius: 25px;
-    font-size: 1rem;
-    outline: none;
-    transition: all 0.3s;
+.search-box input {
+  padding: 12px 15px;
+  border: none;
+  border-radius: 50px;
+  width: 300px;
+  font-size: 1rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-#search-input:focus {
-    border-color: #ff85a2;
-    box-shadow: 0 0 8px rgba(255, 133, 162, 0.4);
+.search-box select {
+  padding: 12px 15px;
+  border: none;
+  border-radius: 50px;
+  background-color: white;
+  cursor: pointer;
 }
 
-#source-select {
-    padding: 12px 15px;
-    border: 2px solid #ffb6c1;
-    border-radius: 25px;
-    background-color: white;
-    color: #5a3d5c;
-    cursor: pointer;
+.search-box button {
+  padding: 12px 25px;
+  background-color: white;
+  color: var(--primary);
+  border: none;
+  border-radius: 50px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-#search-btn {
-    padding: 12px 25px;
-    background-color: #ff85a2;
-    color: white;
-    border: none;
-    border-radius: 25px;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.3s;
+.search-box button:hover {
+  background-color: var(--dark);
+  color: white;
+  transform: translateY(-2px);
 }
 
-#search-btn:hover {
-    background-color: #ff6b8b;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+/* 主要内容区 */
+main {
+  min-height: 60vh;
 }
 
-/* 结果容器 */
-.results-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 25px;
-    margin-top: 20px;
+.loading {
+  text-align: center;
+  padding: 50px;
+  font-size: 1.2rem;
+  color: var(--primary);
 }
 
-/* 小说卡片样式 */
+.error {
+  text-align: center;
+  padding: 30px;
+  background-color: #ffebee;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  color: var(--danger);
+}
+
+.error button {
+  margin-top: 15px;
+  padding: 10px 20px;
+  background-color: var(--danger);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* 小说列表 */
+.novel-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
 .novel-card {
-    background-color: white;
-    border-radius: 15px;
-    overflow: hidden;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    transition: transform 0.3s;
-    display: none; /* 默认隐藏模板 */
-}
-
-.novel-card:not(.template) {
-    display: flex;
-    flex-direction: column;
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
 }
 
 .novel-card:hover {
-    transform: translateY(-5px);
+  transform: translateY(-5px);
 }
 
-.cover {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    background-color: #f0e6ff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #9d8ba6;
-    font-size: 1.2rem;
+.novel-card img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
 }
 
 .novel-info {
-    padding: 20px;
+  padding: 15px;
 }
 
-.title {
-    font-size: 1.3rem;
-    color: #ff85a2;
-    margin-bottom: 8px;
+.novel-info h3 {
+  margin-bottom: 10px;
+  color: var(--primary);
 }
 
-.author {
-    color: #9d8ba6;
-    margin-bottom: 12px;
-    font-size: 0.9rem;
+.novel-info p {
+  margin-bottom: 8px;
+  color: #666;
 }
 
-.desc {
-    color: #5a3d5c;
-    margin-bottom: 15px;
-    font-size: 0.95rem;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+.novel-info .desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-bottom: 15px;
 }
 
-/* 下载选项样式 */
-.download-options {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.novel-info button {
+  padding: 8px 15px;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
-.download-full, .download-range, .favorite-btn {
-    padding: 8px 15px;
-    background-color: #e2c2ff;
-    color: white;
-    border: none;
-    border-radius: 15px;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-size: 0.9rem;
+.novel-info button:hover {
+  background-color: var(--dark);
 }
 
-.download-full:hover, .download-range:hover {
-    background-color: #d1a6ff;
+/* 音乐播放器 */
+.music-player {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: white;
+  padding: 10px 15px;
+  border-radius: 50px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 100;
 }
 
-.favorite-btn {
-    background-color: #ffb6c1;
+.music-player button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--secondary);
+  color: white;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.favorite-btn:hover {
-    background-color: #ff85a2;
-}
-
-.chapter-range {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    flex-wrap: wrap;
-}
-
-.chapter-range input {
-    width: 60px;
-    padding: 5px;
-    border: 1px solid #e2c2ff;
-    border-radius: 5px;
-    text-align: center;
-}
-
-.chapter-range span {
-    color: #9d8ba6;
-}
-
-/* 收藏视图样式 */
-.favorites-container {
-    max-width: 800px;
-    margin: 0 auto;
-}
-
-.favorites-container h2 {
-    text-align: center;
-    color: #ff85a2;
-    margin-bottom: 20px;
-}
-
-.favorites-list {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.favorite-item {
-    background-color: white;
-    border-radius: 15px;
-    padding: 15px;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-}
-
-.favorite-item.template {
-    display: none;
-}
-
-.favorite-item .cover {
-    width: 80px;
-    height: 100px;
-    border-radius: 5px;
-}
-
-.favorite-info {
-    flex: 1;
-}
-
-.favorite-info .title {
-    font-size: 1.1rem;
-    margin-bottom: 5px;
-}
-
-.favorite-info .author {
-    font-size: 0.8rem;
-    margin-bottom: 10px;
-}
-
-.download-favorite, .remove-favorite {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    margin-right: 8px;
-}
-
-.download-favorite {
-    background-color: #e2c2ff;
-}
-
-.remove-favorite {
-    background-color: #ffb6c1;
-}
-
-/* 页脚样式 */
-footer {
-    margin-top: 50px;
-    text-align: center;
-    color: #9d8ba6;
-    font-size: 0.9rem;
+.music-player input[type="range"] {
+  width: 100px;
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
-    .container {
-        padding: 15px;
-    }
-    
-    h1 {
-        font-size: 2rem;
-    }
-    
-    .results-container {
-        grid-template-columns: 1fr;
-    }
-    
-    .search-box {
-        flex-direction: column;
-    }
-    
-    #search-input, #source-select {
-        width: 100%;
-        max-width: 100%;
-    }
-    
-    .favorite-item {
-        flex-direction: column;
-        text-align: center;
-    }
-}
-
-@media (max-width: 480px) {
-    h1 {
-        font-size: 1.8rem;
-    }
-    
-    .novel-card {
-        flex-direction: column;
-    }
-    
-    .cover {
-        height: 150px;
-    }
-}
-
-/* 加载和错误消息 */
-.loading, .error-message {
-    text-align: center;
-    padding: 20px;
-    font-size: 1.2rem;
-    color: #ff85a2;
-    grid-column: 1 / -1;
-}
-
-.error-message {
-    color: #ff6b8b;
+  header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .search-box {
+    flex-direction: column;
+  }
+  
+  .search-box input {
+    width: 100%;
+  }
+  
+  .novel-list {
+    grid-template-columns: 1fr;
+  }
 }
